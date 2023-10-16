@@ -1,0 +1,66 @@
+﻿@page "/"
+@using Microsoft.EntityFrameworkCore
+@using keep_track_of_your_page_visits_in_blazor_server.Models
+
+@inject IDbContextFactory<Data.TrackContext> dbContextFactory
+@inject IJSRuntime _jsRuntime
+
+<PageTitle>Index</PageTitle>
+
+<h1>Hello, world!</h1>
+
+Welcome to your new app.
+
+<SurveyPrompt Title="How is Blazor working for you?" />
+
+<h2>Page Tracks</h2>
+@if (this._pageVisits != null && this._pageVisits.Any() == true)
+{
+    <table style="font-size:small;">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Date Created</th>
+                <th>User Agent</th>
+                <th>Url</th>
+                <th>Referrer</th>
+                <th>IP Address</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var pagevisit in this._pageVisits)
+            {
+                <tr>
+                    <td>@pagevisit.Id</td>
+                    <td>@pagevisit.DateCreated</td>
+                    <td>@pagevisit.UserAgent</td>
+                    <td>@pagevisit.Url</td>
+                    <td>@pagevisit.UrlReferrer</td>
+                    <td>@pagevisit.RemoteIpAddress</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <span>No page visits yet.</span>
+}
+
+
+
+@code {
+    private List<PageVisit>? _pageVisits { get; set; }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        this._pageVisits = this.dbContextFactory.CreateDbContext().PageVisits.ToList();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        await this._jsRuntime.InvokeVoidAsync("website.pages.view");
+    }
+}
